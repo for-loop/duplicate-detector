@@ -1,4 +1,4 @@
-__version__ = '0.5.4'
+__version__ = '0.5.5'
 
 import json
 import base64
@@ -34,9 +34,13 @@ def encode(data, mode=1):
 
 if __name__ == "__main__":
     
-    sc = SparkContext('local')
+    sc = SparkContext('local[4]')
     sqlContext = SQLContext(sc)
-    spark = SparkSession(sc)
+    
+    spark = SparkSession\
+        .builder\
+        .appName('DuplicateDetector')\
+        .getOrCreate()
 
     # Create image DataFrame using image data source in Apache Spark 2.4
     image_df = spark.read.format("image").load('s3a://femto-data/test_1/')
@@ -51,7 +55,9 @@ if __name__ == "__main__":
     db_url = "jdbc:postgresql://{}:{}/{}".format(auth['host'], auth['port'], auth['database'])
     db_properties['username'] = auth['user']
     db_properties['password'] = auth['password']
-    db_properties['driver'] = "org.postgresql.Driver" #db_prop['driver']
+    db_properties['driver'] = "org.postgresql.Driver"
 
     #Save the dataframe to the table. 
-    df.write.jdbc(url=db_url,table='images',mode='overwrite',properties=db_properties)
+    df.write.jdbc(url=db_url,table='images', mode='overwrite', properties=db_properties)
+
+    spark.stop()
