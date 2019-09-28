@@ -1,12 +1,13 @@
-__version__ = '0.5.1'
+__version__ = '0.5.3'
 
-import psycopg2
-from psycopg2 import Error
 import json
 import base64
 import hashlib
+from pyspark.sql import SQLContext
+from pyspark.sql import Row
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
+from pyspark.sql import DataFrameWriter
 
 def get_postgres_credentials():
     '''
@@ -56,12 +57,27 @@ def insert(row):
             connection.close()
             print("PostgreSQL closed")
 
+
 if __name__ == "__main__":
     
     sc = SparkContext('local')
+    sqlContext = SQLContext(sc)
     spark = SparkSession(sc)
 
     # Create image DataFrame using image data source in Apache Spark 2.4
     image_df = spark.read.format("image").load('s3a://femto-data/test_1/')
+
+    paths = image_df.select("image.origin", "image.data").rdd.map(lambda x: Row(path=x[0], encoding=encode(x[1])))
+    output = paths.collect()
+    df = sqlContext.createDataFrame(output)
     
-    image_df.select("image.origin", "image.data").foreach(insert)
+    #Create the Database properties
+    auth = get_postgres_credentials()
+    db_properties={}
+    db_url = "jdbc:postgresql://{}:{}/{}".format(auth['host'], auth['port'], auth['database'])
+    db_properties['username'] = auth['user']
+    db_properties['password'] = auth['password']
+    db_properties['driver'] = "org.postgresql.Driver" #db_prop['driver']
+
+    #Save the dataframe to the table. 
+    df.write.jdbc(url=db_url,table='images',mode='overwrite',properties=db_properties)
