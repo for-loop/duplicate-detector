@@ -48,12 +48,13 @@ I coded in **Python**.
     "database":"xxxx"
 }
 ```
+* [JDBC driver](https://jdbc.postgresql.org/download.html): Download to `~/drivers/ on master node`
 
 # Run
 
 1. From the Terminal, cd to the src directory
 2. Execute the following command:
 ```bash
-spark-submit --master spark://<master DNS>:7077 duplicate_detector.py
+spark-submit --jars ~/drivers/postgresql-42.2.8.jar --master spark://<master DNS>:7077 duplicate_detector.py
 ```
 3. Log onto PostgreSQL database and review `images` table
