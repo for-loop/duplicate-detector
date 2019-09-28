@@ -1,4 +1,4 @@
-__version__ = '0.5.6'
+__version__ = '0.5.7'
 
 import sys
 import boto3
@@ -42,20 +42,19 @@ def encode(file_path, bucket_name, region_name='us-west-2', mode=1):
 if __name__ == "__main__":
     bucket_name = sys.argv[1]
     
-    sc = SparkContext('local[4]')
-    sqlContext = SQLContext(sc)
-    
     spark = SparkSession\
         .builder\
         .appName('DuplicateDetector')\
         .getOrCreate()
+    
+    sqlContext = SQLContext(spark.sparkContext)
     
     s3 = boto3.resource('s3')
     my_bucket = s3.Bucket(bucket_name)
     
     # Get a list of file paths
     file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix='test_1/')]
-    rows = sc.parallelize(file_paths).map(lambda x: Row(path=x, content=encode(x, bucket_name)))
+    rows = spark.sparkContext.parallelize(file_paths).map(lambda x: Row(path=x, content=encode(x, bucket_name)))
     output = rows.collect()
     df = sqlContext.createDataFrame(output)
     
