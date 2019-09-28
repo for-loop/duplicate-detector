@@ -1,4 +1,4 @@
-__version__ = '0.5.0'
+__version__ = '0.5.1'
 
 import psycopg2
 from psycopg2 import Error
@@ -8,12 +8,6 @@ import hashlib
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 
-def debug(elem):
-    '''
-    Print element
-    '''
-    print(elem)
-    return None
 
 def encode(data, mode=1):
     '''
@@ -62,7 +56,5 @@ if __name__ == "__main__":
 
     # Create image DataFrame using image data source in Apache Spark 2.4
     image_df = spark.read.format("image").load('s3a://femto-data/test_1/')
-    
-    #image_df.select("image.origin", "image.data").foreach(debug)
     
     image_df.select("image.origin", "image.data").foreach(insert)
