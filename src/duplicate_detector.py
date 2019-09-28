@@ -1,5 +1,7 @@
-__version__ = '0.5.5'
+__version__ = '0.5.6'
 
+import sys
+import boto3
 import json
 import base64
 import hashlib
@@ -20,12 +22,17 @@ def get_postgres_credentials():
     return auth
 
 
-def encode(data, mode=1):
+def encode(file_path, bucket_name, region_name='us-west-2', mode=1):
     '''
     Return encoded string 
     0: base64 (first 50)
     1: md5
     '''
+    s3 = boto3.client('s3', region_name)
+    
+    file_obj = s3.get_object(Bucket=bucket_name, Key=file_path)
+    data = file_obj['Body'].read()
+    
     if mode == 0:
         return base64.b64encode(data).decode()[:50]
     else:
@@ -33,6 +40,7 @@ def encode(data, mode=1):
 
 
 if __name__ == "__main__":
+    bucket_name = sys.argv[1]
     
     sc = SparkContext('local[4]')
     sqlContext = SQLContext(sc)
@@ -41,12 +49,14 @@ if __name__ == "__main__":
         .builder\
         .appName('DuplicateDetector')\
         .getOrCreate()
-
-    # Create image DataFrame using image data source in Apache Spark 2.4
-    image_df = spark.read.format("image").load('s3a://femto-data/test_1/')
-
-    paths = image_df.select("image.origin", "image.data").rdd.map(lambda x: Row(path=x[0], encoding=encode(x[1])))
-    output = paths.collect()
+    
+    s3 = boto3.resource('s3')
+    my_bucket = s3.Bucket(bucket_name)
+    
+    # Get a list of file paths
+    file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix='test_1/')]
+    rows = sc.parallelize(file_paths).map(lambda x: Row(path=x, content=encode(x, bucket_name)))
+    output = rows.collect()
     df = sqlContext.createDataFrame(output)
     
     #Create the Database properties
@@ -57,7 +67,7 @@ if __name__ == "__main__":
     db_properties['password'] = auth['password']
     db_properties['driver'] = "org.postgresql.Driver"
 
-    #Save the dataframe to the table. 
+    #Save the DataFrame to the table. 
     df.write.jdbc(url=db_url,table='images', mode='overwrite', properties=db_properties)
 
     spark.stop()
