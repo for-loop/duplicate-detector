@@ -1,4 +1,4 @@
-__version__ = '0.5.3'
+__version__ = '0.5.4'
 
 import json
 import base64
@@ -9,6 +9,7 @@ from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.sql import DataFrameWriter
 
+
 def get_postgres_credentials():
     '''
     Return credentials for PostgreSQL
@@ -17,6 +18,7 @@ def get_postgres_credentials():
         auth = json.load(read_file)
 
     return auth
+
 
 def encode(data, mode=1):
     '''
@@ -28,34 +30,6 @@ def encode(data, mode=1):
         return base64.b64encode(data).decode()[:50]
     else:
         return hashlib.md5(data).hexdigest()
-
-def insert(row):
-    '''
-    Insert a row into PostgreSQL
-    '''
-    file_path = row[0]
-    data = row[1]
-    try:
-        auth = get_postgres_credentials()
-        
-        connection = psycopg2.connect(user = auth['user'],
-                                      password = auth['password'],
-                                      host = auth['host'],
-                                      port = auth['port'],
-                                      database = auth['database'])
-        cursor = connection.cursor()
-
-        encoded_str = encode(data)
-        q = "INSERT INTO images (path, encoding) VALUES ('" + file_path + "', '" + encoded_str + "');"
-        cursor.execute(q)
-        connection.commit()
-    except () as error:
-        print("Error while connecting to PostgreSQL", error)
-    finally:
-        if (connection):
-            cursor.close()
-            connection.close()
-            print("PostgreSQL closed")
 
 
 if __name__ == "__main__":
