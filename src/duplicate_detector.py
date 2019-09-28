@@ -8,6 +8,14 @@ import hashlib
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 
+def get_postgres_credentials():
+    '''
+    Return credentials for PostgreSQL
+    '''
+    with open("../postgres_credentials.json", "r") as read_file:
+        auth = json.load(read_file)
+
+    return auth
 
 def encode(data, mode=1):
     '''
@@ -27,8 +35,7 @@ def insert(row):
     file_path = row[0]
     data = row[1]
     try:
-        with open("../postgres_credentials.json", "r") as read_file:
-            auth = json.load(read_file)
+        auth = get_postgres_credentials()
         
         connection = psycopg2.connect(user = auth['user'],
                                       password = auth['password'],
