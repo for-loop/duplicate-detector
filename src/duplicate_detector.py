@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.6.4'
+__version__ = '0.6.5'
 
 import sys
 import boto3
@@ -29,8 +29,8 @@ def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: duplicate_detector.py <s3bucket>", file=sys.stderr)
+    if len(sys.argv) != 3:
+        print("Usage: duplicate_detector.py <method> <s3bucket>", file=sys.stderr)
         sys.exit(-1)
     
     spark = SparkSession\
@@ -39,14 +39,15 @@ if __name__ == "__main__":
         .getOrCreate()
     
     # Get a list of file paths in S3 bucket
-    bucket_name = sys.argv[1]
+    bucket_name = sys.argv[2]
     s3 = boto3.resource('s3')
     my_bucket = s3.Bucket(bucket_name)
     file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix='test_1/')]
     
     # Make DataFrame
+    method_name = sys.argv[1]
     df = spark.sparkContext.parallelize(file_paths)\
-        .map(lambda x: Row(path=x, content=encode(x, bucket_name)))\
+        .map(lambda x: Row(path=x, content=encode(x, bucket_name, method=method_name)))\
         .toDF()\
         .withColumn("img_id", F.monotonically_increasing_id())
     
