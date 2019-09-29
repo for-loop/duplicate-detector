@@ -1,12 +1,13 @@
 from __future__ import print_function
 
-__version__ = '0.6.3'
+__version__ = '0.6.4'
 
 import sys
 import boto3
 import base64
 import hashlib
 from pyspark.sql import Row
+from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
 import pgconf as pc
 
@@ -46,7 +47,8 @@ if __name__ == "__main__":
     # Make DataFrame
     df = spark.sparkContext.parallelize(file_paths)\
         .map(lambda x: Row(path=x, content=encode(x, bucket_name)))\
-        .toDF()
+        .toDF()\
+        .withColumn("img_id", F.monotonically_increasing_id())
     
     # Save the DataFrame to PostgreSQL table. 
     pg_conf = pc.PostgresConfigurator()
