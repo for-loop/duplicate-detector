@@ -1,4 +1,4 @@
-__version__ = '0.5.7'
+__version__ = '0.5.8'
 
 import sys
 import boto3
@@ -22,20 +22,20 @@ def get_postgres_credentials():
     return auth
 
 
-def encode(file_path, bucket_name, region_name='us-west-2', mode=1):
+def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
     '''
     Return encoded string 
-    0: base64 (first 50)
-    1: md5
+    checksum: md5
+    base: base64
     '''
     s3 = boto3.client('s3', region_name)
     
     file_obj = s3.get_object(Bucket=bucket_name, Key=file_path)
     data = file_obj['Body'].read()
     
-    if mode == 0:
-        return base64.b64encode(data).decode()[:50]
-    else:
+    if method == 'checksum':
+        return base64.b64encode(data).decode()
+    else if method == 'base':
         return hashlib.md5(data).hexdigest()
 
 
