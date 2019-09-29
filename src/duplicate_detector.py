@@ -34,9 +34,9 @@ def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
     data = file_obj['Body'].read()
     
     if method == 'checksum':
-        return base64.b64encode(data).decode()
-    else if method == 'base':
         return hashlib.md5(data).hexdigest()
+    elif method == 'base':
+        return base64.b64encode(data).decode()
 
 
 if __name__ == "__main__":
