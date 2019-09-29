@@ -56,6 +56,9 @@ I coded in **Python 3**.
 1. From the Terminal, cd to the src directory
 2. Execute the following command:
 ```bash
-spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py <bucket_name>
+spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py <method> <bucket_name>
 ```
+### Supported method
+* `checksum`
+* `base`
 3. Log onto PostgreSQL database and review `images` table
