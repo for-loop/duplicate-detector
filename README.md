@@ -32,10 +32,11 @@ Some of the problems to consider include the following:
 5. Output the result to PostgreSQL.
 6. Build a simple frontend to visualize the result.
 
-I coded in **Python**.
+I coded in **Python 3**.
 
 **Test cases (in S3 bucket)**
-* test_1: Fifteen `jpg` files with one set of duplicate and one set of triplicate
+* test_1: A set of 15 `jpg` files containing one set of duplicate and one set of triplicate
+* test_2: A set of 120 `jpg` files containing one set of duplicate and one set of triplicate
 
 # Not included
 * Authentication for PostgreSQL. Create `postgres_credentials.json` at root level. It should contain the following fields:
