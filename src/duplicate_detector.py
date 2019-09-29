@@ -1,4 +1,6 @@
-__version__ = '0.6.0'
+from __future__ import print_function
+
+__version__ = '0.6.1'
 
 import sys
 import boto3
@@ -29,6 +31,10 @@ def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
 
 
 if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: duplicate_detector.py <s3bucket>", file=sys.stderr)
+        sys.exit(-1)
+    
     bucket_name = sys.argv[1]
     
     spark = SparkSession\
