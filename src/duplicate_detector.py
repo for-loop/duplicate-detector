@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 
 import sys
 import boto3
@@ -49,9 +49,10 @@ if __name__ == "__main__":
     
     # Get a list of file paths
     file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix='test_1/')]
-    rows = spark.sparkContext.parallelize(file_paths).map(lambda x: Row(path=x, content=encode(x, bucket_name)))
-    output = rows.collect()
-    df = sqlContext.createDataFrame(output)
+    
+    df = spark.sparkContext.parallelize(file_paths)\
+        .map(lambda x: Row(path=x, content=encode(x, bucket_name)))\
+        .toDF()
     
     # Configure PostgreSQL
     pg_conf = pc.PostgresConfigurator()
