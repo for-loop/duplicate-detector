@@ -1,8 +1,7 @@
-__version__ = '0.5.8'
+__version__ = '0.6.0'
 
 import sys
 import boto3
-import json
 import base64
 import hashlib
 from pyspark.sql import SQLContext
@@ -10,17 +9,7 @@ from pyspark.sql import Row
 from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
 from pyspark.sql import DataFrameWriter
-
-
-def get_postgres_credentials():
-    '''
-    Return credentials for PostgreSQL
-    '''
-    with open("../postgres_credentials.json", "r") as read_file:
-        auth = json.load(read_file)
-
-    return auth
-
+import pgconf as pc
 
 def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
     '''
@@ -58,15 +47,13 @@ if __name__ == "__main__":
     output = rows.collect()
     df = sqlContext.createDataFrame(output)
     
-    #Create the Database properties
-    auth = get_postgres_credentials()
-    db_properties={}
-    db_url = "jdbc:postgresql://{}:{}/{}".format(auth['host'], auth['port'], auth['database'])
-    db_properties['username'] = auth['user']
-    db_properties['password'] = auth['password']
-    db_properties['driver'] = "org.postgresql.Driver"
+    # Configure PostgreSQL
+    pg_conf = pc.PostgresConfigurator()
 
     #Save the DataFrame to the table. 
-    df.write.jdbc(url=db_url,table='images', mode='overwrite', properties=db_properties)
+    df.write.jdbc(url = pg_conf.get_url(),
+                  table = 'images', 
+                  mode = 'overwrite', 
+                  properties = pg_conf.get_properties())
 
     spark.stop()
