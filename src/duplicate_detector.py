@@ -1,16 +1,13 @@
 from __future__ import print_function
 
-__version__ = '0.6.2'
+__version__ = '0.6.3'
 
 import sys
 import boto3
 import base64
 import hashlib
-from pyspark.sql import SQLContext
 from pyspark.sql import Row
-from pyspark.context import SparkContext
 from pyspark.sql.session import SparkSession
-from pyspark.sql import DataFrameWriter
 import pgconf as pc
 
 def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
@@ -35,29 +32,24 @@ if __name__ == "__main__":
         print("Usage: duplicate_detector.py <s3bucket>", file=sys.stderr)
         sys.exit(-1)
     
-    bucket_name = sys.argv[1]
-    
     spark = SparkSession\
         .builder\
         .appName('DuplicateDetector')\
         .getOrCreate()
     
-    sqlContext = SQLContext(spark.sparkContext)
-    
+    # Get a list of file paths in S3 bucket
+    bucket_name = sys.argv[1]
     s3 = boto3.resource('s3')
     my_bucket = s3.Bucket(bucket_name)
-    
-    # Get a list of file paths
     file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix='test_1/')]
     
+    # Make DataFrame
     df = spark.sparkContext.parallelize(file_paths)\
         .map(lambda x: Row(path=x, content=encode(x, bucket_name)))\
         .toDF()
     
-    # Configure PostgreSQL
+    # Save the DataFrame to PostgreSQL table. 
     pg_conf = pc.PostgresConfigurator()
-
-    #Save the DataFrame to the table. 
     df.write.jdbc(url = pg_conf.get_url(),
                   table = 'images', 
                   mode = 'overwrite', 
