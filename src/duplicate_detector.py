@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.7.5'
+__version__ = '0.7.6'
 
 import argparse
 import io
@@ -66,7 +66,7 @@ def encode(file_path, bucket_name, region_name, method):
         return base64.b64encode(data).decode()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description = "Duplicate Detector")
     
     parser.add_argument("method", type = str, nargs = 1,
@@ -119,3 +119,7 @@ if __name__ == "__main__":
                   properties = pg_conf.get_properties())
 
     spark.stop()
+
+    
+if __name__ == "__main__":
+    main()
