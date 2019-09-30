@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.7.1'
+__version__ = '0.7.2'
 
 import argparse
 import io
@@ -73,27 +73,27 @@ if __name__ == "__main__":
                         metavar = "algorithm", default = "checksum",
                         help = "Method of detecting duplicates. The default \
                         is 'checksum'.")
-    
+
     parser.add_argument("bucket", type = str, nargs = 1,
                         metavar = "bucket_name", default = None,
                         help = "Name of the S3 bucket where the files are stored.")
-    
+
     parser.add_argument("-r", "--region", type = str, nargs = 1,
                         metavar = "region_name", default = "us-west-2",
                         help = "Name of the region where the S3 bucket is located. \
                         The default is 'us-west-2'.")
     
     parser.add_argument("-d", "--dir", type = str, nargs = 1,
-                        metavar = "directory", default = "validation/",
+                        metavar = "directory", default = "validation",
                         help = "Name of the directory where the files are located. \
-                        The default is 'validation/'.")
+                        The default is 'validation'.")
     
     args = parser.parse_args()
     
     if args.method != None: method_name = args.method[0]
     if args.bucket != None: bucket_name = args.bucket[0]
-    if args.region != None: region_name = args.region[0]
-    if args.dir != None: dir = args.dir[0]
+    if args.region != None: region_name = args.region
+    if args.dir != None: dir_name = args.dir
     
     spark = SparkSession\
         .builder\
@@ -101,13 +101,11 @@ if __name__ == "__main__":
         .getOrCreate()
     
     # Get a list of file paths in S3 bucket
-    bucket_name = sys.argv[2]
     s3 = boto3.resource('s3')
     my_bucket = s3.Bucket(bucket_name)
-    file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix=dir)]
+    file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix="{}/".format(dir_name))]
     
     # Make DataFrame
-    method_name = sys.argv[1]
     df = spark.sparkContext.parallelize(file_paths)\
         .map(lambda x: Row(path=x, content=encode(x, bucket_name, region_name, method_name)))\
         .toDF()\
