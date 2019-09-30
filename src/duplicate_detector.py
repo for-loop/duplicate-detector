@@ -1,11 +1,14 @@
 from __future__ import print_function
 
-__version__ = '0.6.5'
+__version__ = '0.6.6'
 
 import sys
+import io
 import boto3
 import base64
 import hashlib
+import skimage.io as skio
+import skimage.transform as tf
 from pyspark.sql import Row
 from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
@@ -16,6 +19,7 @@ def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
     Return encoded string 
     checksum: md5
     base: base64
+    base_small: base64 on reduced image resolution
     '''
     s3 = boto3.client('s3', region_name)
     
@@ -26,6 +30,18 @@ def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
         return hashlib.md5(data).hexdigest()
     elif method == 'base':
         return base64.b64encode(data).decode()
+    elif method == 'base_small':
+        s3_res = boto3.resource('s3', region_name)
+        bucket = s3_res.Bucket(bucket_name)
+        obj = bucket.Object(file_path)
+        file_stream = io.BytesIO()
+        obj.download_fileobj(file_stream)
+        img = skio.imread(file_stream)
+        denominator = 2**8
+        width = img.shape[0]//denominator
+        height = img.shape[1]//denominator
+        resized_img = (transform.resize(img, (width, height), mode='reflect'*256)).astype(np.uint8)
+        return base64.b64encode(resized_img).decode()
 
 
 if __name__ == "__main__":
