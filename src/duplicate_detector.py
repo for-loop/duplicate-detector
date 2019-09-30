@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.7.3'
+__version__ = '0.7.4'
 
 import argparse
 import io
@@ -69,15 +69,15 @@ def encode(file_path, bucket_name, region_name, method):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Duplicate Detector")
     
+    parser.add_argument("bucket", type = str, nargs = 1,
+                        metavar = "bucket_name", default = None,
+                        help = "Name of the S3 bucket where the files are stored.")
+    
     parser.add_argument("method", type = str, nargs = 1,
                         metavar = "algorithm", default = ["checksum"],
                         help = "Method of detecting duplicates. The default \
                         is 'checksum'.")
-
-    parser.add_argument("bucket", type = str, nargs = 1,
-                        metavar = "bucket_name", default = None,
-                        help = "Name of the S3 bucket where the files are stored.")
-
+    
     parser.add_argument("-r", "--region", type = str, nargs = 1,
                         metavar = "region_name", default = ["us-west-2"],
                         help = "Name of the region where the S3 bucket is located. \
@@ -90,8 +90,8 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
-    if args.method != None: method_name = args.method[0]
     if args.bucket != None: bucket_name = args.bucket[0]
+    if args.method != None: method_name = args.method[0]
     if args.region != None: region_name = args.region[0]
     if args.dir != None: dir_name = args.dir[0]
     
