@@ -61,4 +61,5 @@ spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2
 ### Supported method
 * `checksum`
 * `base`
+* `base_small`
 3. Log onto PostgreSQL database and review `images` table
