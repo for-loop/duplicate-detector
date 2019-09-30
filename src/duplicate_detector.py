@@ -1,14 +1,15 @@
 from __future__ import print_function
 
-__version__ = '0.6.6'
+__version__ = '0.6.7'
 
 import sys
 import io
 import boto3
 import base64
 import hashlib
+import numpy as np
 import skimage.io as skio
-import skimage.transform as tf
+import skimage.transform as transform
 from pyspark.sql import Row
 from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
@@ -40,7 +41,7 @@ def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
         denominator = 2**8
         width = img.shape[0]//denominator
         height = img.shape[1]//denominator
-        resized_img = (transform.resize(img, (width, height), mode='reflect'*256)).astype(np.uint8)
+        resized_img = (transform.resize(img, (width, height), mode='reflect')*256).astype(np.uint8)
         return base64.b64encode(resized_img).decode()
 
 
