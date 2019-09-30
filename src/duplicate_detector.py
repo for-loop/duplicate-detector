@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.6.9'
+__version__ = '0.7.0'
 
 import sys
 import io
@@ -43,7 +43,7 @@ def resize(file_path, bucket_name, region_name, reduce_factor=256):
     # with preserve_range=True and anti_aliasing=False.
     # It is done manually instead because the installed skimage vers 0.10
     # does not support the parameters.
-    PRESERVE_RANGE_FACTOR = 256
+    PRESERVE_RANGE_FACTOR = 255
     
     return (transform.resize(img, (width, height), mode='reflect')*PRESERVE_RANGE_FACTOR).astype(np.uint8)
     
