@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.7.2'
+__version__ = '0.7.3'
 
 import argparse
 import io
@@ -70,7 +70,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Duplicate Detector")
     
     parser.add_argument("method", type = str, nargs = 1,
-                        metavar = "algorithm", default = "checksum",
+                        metavar = "algorithm", default = ["checksum"],
                         help = "Method of detecting duplicates. The default \
                         is 'checksum'.")
 
@@ -79,12 +79,12 @@ if __name__ == "__main__":
                         help = "Name of the S3 bucket where the files are stored.")
 
     parser.add_argument("-r", "--region", type = str, nargs = 1,
-                        metavar = "region_name", default = "us-west-2",
+                        metavar = "region_name", default = ["us-west-2"],
                         help = "Name of the region where the S3 bucket is located. \
                         The default is 'us-west-2'.")
     
     parser.add_argument("-d", "--dir", type = str, nargs = 1,
-                        metavar = "directory", default = "validation",
+                        metavar = "directory", default = ["validation"],
                         help = "Name of the directory where the files are located. \
                         The default is 'validation'.")
     
@@ -92,8 +92,8 @@ if __name__ == "__main__":
     
     if args.method != None: method_name = args.method[0]
     if args.bucket != None: bucket_name = args.bucket[0]
-    if args.region != None: region_name = args.region
-    if args.dir != None: dir_name = args.dir
+    if args.region != None: region_name = args.region[0]
+    if args.dir != None: dir_name = args.dir[0]
     
     spark = SparkSession\
         .builder\
