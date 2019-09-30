@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.7.3'
+__version__ = '0.7.5'
 
 import argparse
 import io
@@ -26,7 +26,7 @@ def load(file_path, bucket_name, region_name):
     return file_obj['Body'].read()
 
 
-def resize(file_path, bucket_name, region_name, reduce_factor=256):
+def resize(file_path, bucket_name, region_name, reduce_factor = 128):
     '''
     Load and return image data of reduced resolution
     '''
