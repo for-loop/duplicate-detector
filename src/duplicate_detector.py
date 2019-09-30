@@ -1,8 +1,8 @@
 from __future__ import print_function
 
-__version__ = '0.7.0'
+__version__ = '0.7.1'
 
-import sys
+import argparse
 import io
 import boto3
 import base64
@@ -48,7 +48,7 @@ def resize(file_path, bucket_name, region_name, reduce_factor=256):
     return (transform.resize(img, (width, height), mode='reflect')*PRESERVE_RANGE_FACTOR).astype(np.uint8)
     
     
-def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
+def encode(file_path, bucket_name, region_name, method):
     '''
     Return encoded string 
     checksum: md5
@@ -67,9 +67,33 @@ def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: duplicate_detector.py <method> <s3bucket>", file=sys.stderr)
-        sys.exit(-1)
+    parser = argparse.ArgumentParser(description = "Duplicate Detector")
+    
+    parser.add_argument("method", type = str, nargs = 1,
+                        metavar = "algorithm", default = "checksum",
+                        help = "Method of detecting duplicates. The default \
+                        is 'checksum'.")
+    
+    parser.add_argument("bucket", type = str, nargs = 1,
+                        metavar = "bucket_name", default = None,
+                        help = "Name of the S3 bucket where the files are stored.")
+    
+    parser.add_argument("-r", "--region", type = str, nargs = 1,
+                        metavar = "region_name", default = "us-west-2",
+                        help = "Name of the region where the S3 bucket is located. \
+                        The default is 'us-west-2'.")
+    
+    parser.add_argument("-d", "--dir", type = str, nargs = 1,
+                        metavar = "directory", default = "validation/",
+                        help = "Name of the directory where the files are located. \
+                        The default is 'validation/'.")
+    
+    args = parser.parse_args()
+    
+    if args.method != None: method_name = args.method[0]
+    if args.bucket != None: bucket_name = args.bucket[0]
+    if args.region != None: region_name = args.region[0]
+    if args.dir != None: dir = args.dir[0]
     
     spark = SparkSession\
         .builder\
@@ -80,12 +104,12 @@ if __name__ == "__main__":
     bucket_name = sys.argv[2]
     s3 = boto3.resource('s3')
     my_bucket = s3.Bucket(bucket_name)
-    file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix='test_1/')]
+    file_paths = [file_obj.key for file_obj in my_bucket.objects.filter(Prefix=dir)]
     
     # Make DataFrame
     method_name = sys.argv[1]
     df = spark.sparkContext.parallelize(file_paths)\
-        .map(lambda x: Row(path=x, content=encode(x, bucket_name, method=method_name)))\
+        .map(lambda x: Row(path=x, content=encode(x, bucket_name, region_name, method_name)))\
         .toDF()\
         .withColumn("img_id", F.monotonically_increasing_id())
     
