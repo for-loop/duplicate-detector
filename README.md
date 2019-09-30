@@ -37,6 +37,7 @@ I coded in **Python 3**.
 **Test cases (in S3 bucket)**
 * test_1: A set of 15 `jpg` files containing one set of duplicate and one set of triplicate
 * test_2: A set of 120 `jpg` files containing one set of duplicate and one set of triplicate
+* test_3: A set of 10 `jpg` files that contain the same image except a text is embedded in different locations
 
 # Not included
 * Authentication for PostgreSQL. Create `postgres_credentials.json` at root level. It should contain the following fields:
