@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.6.8'
+__version__ = '0.6.9'
 
 import sys
 import io
@@ -45,7 +45,7 @@ def resize(file_path, bucket_name, region_name, reduce_factor=256):
     # does not support the parameters.
     PRESERVE_RANGE_FACTOR = 256
     
-    return (tranform.resize(img, (width, height), mode='reflect')*PRESERVE_RANGE_FACTOR).astype(np.uint8)
+    return (transform.resize(img, (width, height), mode='reflect')*PRESERVE_RANGE_FACTOR).astype(np.uint8)
     
     
 def encode(file_path, bucket_name, region_name='us-west-2', method='checksum'):
