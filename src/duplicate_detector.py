@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.7.8'
+__version__ = '0.7.9'
 
 import argparse
 import io
@@ -122,8 +122,9 @@ def main():
     
     # Save the DataFrame to PostgreSQL table. 
     pg_conf = pc.PostgresConfigurator()
+    table_name = 'images_{}_{}'.format(method_name, dir_name);
     df.write.jdbc(url = pg_conf.get_url(),
-                  table = 'images', 
+                  table = table_name, 
                   mode = 'overwrite', 
                   properties = pg_conf.get_properties())
 
