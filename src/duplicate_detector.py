@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.7.7'
+__version__ = '0.7.8'
 
 import argparse
 import io
@@ -66,7 +66,10 @@ def encode(file_path, bucket_name, region_name, method):
         return base64.b64encode(data).decode()
 
 
-def main():
+def parse_args():
+    '''
+    Parse command line args
+    '''
     parser = argparse.ArgumentParser(description = "Duplicate Detector")
 
     parser.add_argument("bucket", type = str, nargs = 1,
@@ -94,6 +97,12 @@ def main():
     if args.method != None: method_name = args.method[0]
     if args.region != None: region_name = args.region[0]
     if args.dir != None: dir_name = args.dir[0]
+    
+    return (bucket_name, method_name, region_name, dir_name)
+
+
+def main():
+    bucket_name, method_name, region_name, dir_name = parse_args()
     
     spark = SparkSession\
         .builder\
