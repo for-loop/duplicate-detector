@@ -1,7 +1,8 @@
 # Table of Contents
 1. [Problem](README.md#problem)
 2. [Approach](README.md#approach)
-3. [Run](README.md#run)
+3. [Dependencies](README.md#dependencies)
+4. [Run](README.md#run)
 
 # Problem
 
@@ -20,8 +21,8 @@ Some of the problems to consider include the following:
 
 # Approach
 
-1. Transfer [Open Image Dataset](https://github.com//cvdfoundation/open-images-dataset) to your AWS S3 bucket.
-2. Set up Spark cluster using [Pegasus](https://github.com/InsightDataScience/pegasus)
+1. Transfer [Open Image Dataset](https://github.com//cvdfoundation/open-images-dataset) to your Amazon S3 bucket.
+2. Set up Spark cluster (3 workers, 18 cores) using [Pegasus](https://github.com/InsightDataScience/pegasus)
 3. Load the data into DataFrame using Apache Spark.
 4. Iterate through each image and do one of the following (not all will be available):
 	* Base64 encode (with resampling to reduce resolution)
@@ -39,7 +40,7 @@ I coded in **Python 3**.
 * test_2: A set of 120 `jpg` files containing one set of duplicate and one set of triplicate
 * test_3: A set of 10 `jpg` files that contain the same image except a text is embedded in different locations
 
-# Not included
+# Dependencies
 * Authentication for PostgreSQL. Create `postgres_credentials.json` at root level. It should contain the following fields:
 ```json
 {
@@ -50,7 +51,9 @@ I coded in **Python 3**.
     "database":"xxxx"
 }
 ```
-* [JDBC driver](https://jdbc.postgresql.org/download.html): Download to `~/drivers/ on master node`
+* [JDBC driver](https://jdbc.postgresql.org/download.html): Download to `~/drivers/` on master node
+* [boto3](https://github.com/boto/boto3): Install on all nodes
+* [scikit-image](https://scikit-image.org/docs/dev/install.html): Install on all nodes
 
 # Run
 
@@ -60,9 +63,10 @@ I coded in **Python 3**.
 spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py <bucket name> [--method <method name> --region <region name> --dir <directory name>]
 ```
 ### Supported method
-* `checksum`
-* `base`
-* `base_small`
+* `checksum`: Calculate md5 checksum
+* `base`: Base64 encoding
+* `base_small` Low resolution resampling followed by Base64 encoding
+
 For more details, use `-h` option:
 ```bash
 spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py -h
