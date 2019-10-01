@@ -54,7 +54,7 @@ I coded in **Python 3**.
 
 # Run
 
-1. From the Terminal, cd to the src directory
+1. From the Terminal, cd to the `src` directory
 2. Execute the following command:
 ```bash
 spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py <bucket name> [--method <method name> --region <region name> --dir <directory name>]
@@ -63,4 +63,8 @@ spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2
 * `checksum`
 * `base`
 * `base_small`
-3. Log onto PostgreSQL database and review `images` table
+For more details, use `-h` option:
+```bash
+spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py -h
+```
+3. Log onto PostgreSQL database and review `images_<method name>_<directory name>` table
