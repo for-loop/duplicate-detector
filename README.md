@@ -61,13 +61,16 @@ spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2
 ### Supported method
 * `checksum`: Calculate md5 checksum
 * `base`: Base64 encoding
-* `base_small` Low resolution resampling followed by Base64 encoding
+* `base_small`: Low resolution resampling followed by Base64 encoding
 
+### Help
 For more details, use `-h` option:
 ```bash
 spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py -h
 ```
-3. Log onto PostgreSQL database and review `images_<method name>_<directory name>` and `contents_<method name>_<directory name>` tables
+3. Log onto PostgreSQL database and review the following tables:
+* `images_<method name>_<directory name>`
+* `contents_<method name>_<directory name>`
 
 # Tests
 The following test cases (in Amazon S3) are used for benchmark:
