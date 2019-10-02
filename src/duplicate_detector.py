@@ -1,12 +1,13 @@
 from __future__ import print_function
 
-__version__ = '0.8.0'
+__version__ = '0.8.1'
 
 import argparse
 import io
 import boto3
 import base64
 import hashlib
+import time
 import numpy as np
 import skimage.io as skio
 import skimage.transform as transform
@@ -104,6 +105,9 @@ def parse_args():
 
 def main():
     bucket_name, method_name, region_name, dir_name = parse_args()
+
+    # Benchmark
+    t = time.time()
     
     spark = SparkSession\
         .builder\
@@ -143,6 +147,8 @@ def main():
                            properties = pg_conf.get_properties())
     
     spark.stop()
+
+    print('Elapsed time: {} s'.format(time.time() - t))
 
     
 if __name__ == "__main__":
