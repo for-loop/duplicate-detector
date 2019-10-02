@@ -3,6 +3,7 @@
 2. [Approach](README.md#approach)
 3. [Dependencies](README.md#dependencies)
 4. [Run](README.md#run)
+5. [Tests](README.md#tests)
 
 # Problem
 
@@ -12,7 +13,7 @@ This is my Insight Data Engineering project.
 
 Some of the problems to consider include the following:
 
-* The dataset is big. I must push the data quickly through the pipeline so that I can iteratively refine it.
+* The dataset is big (2 million images; 500 GB+). I must push the data quickly through the pipeline so that I can iteratively refine it.
 * There are more than one way to detect duplicate content.
 * Some algorithms may detect not only the duplicate content, but also similar content. That's okay.
 * Benchmark and evaluate pros and cons for each algorithm.
@@ -34,11 +35,6 @@ Some of the problems to consider include the following:
 6. Build a simple frontend to visualize the result.
 
 I coded in **Python 3**.
-
-**Test cases (in S3 bucket)**
-* test_1: A set of 15 `jpg` files containing one set of duplicate and one set of triplicate
-* test_2: A set of 120 `jpg` files containing one set of duplicate and one set of triplicate
-* test_3: A set of 10 `jpg` files that contain the same image except a text is embedded in different locations
 
 # Dependencies
 * Authentication for PostgreSQL. Create `postgres_credentials.json` at root level. It should contain the following fields:
@@ -72,3 +68,10 @@ For more details, use `-h` option:
 spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py -h
 ```
 3. Log onto PostgreSQL database and review `images_<method name>_<directory name>` and `contents_<method name>_<directory name>` tables
+
+# Tests
+The following test cases (in Amazon S3) are used for benchmark:
+1. `test_1`: A set of 15 `jpg` files (5.3 MB) containing one set of duplicate and one set of triplicate
+2. `test_2`: A set of 120 `jpg` files (40.5 MB) containing one set of duplicate and one set of triplicate
+3. `test_3`: A set of 10 `jpg` files (7.3 MB) containing the same image with watermark in different locations
+4. `test_4`: A set of 3421 `jpg` files (1.0 GB) containing one set of duplicate and one set of triplicate
