@@ -17,3 +17,6 @@ class PostgresConfigurator:
 
     def get_properties(self):
         return self._properties
+
+    def get_auth(self):
+        return self._auth

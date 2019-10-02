@@ -1,12 +1,13 @@
 from __future__ import print_function
 
-__version__ = '0.8.0'
+__version__ = '0.8.3'
 
 import argparse
 import io
 import boto3
 import base64
 import hashlib
+import time
 import numpy as np
 import skimage.io as skio
 import skimage.transform as transform
@@ -15,6 +16,8 @@ from pyspark.sql import Row
 from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
 import pgconf as pc
+import psycopg2
+from psycopg2 import Error
 
 
 def load(file_path, bucket_name, region_name):
@@ -102,8 +105,47 @@ def parse_args():
     return (bucket_name, method_name, region_name, dir_name)
 
 
+def log_benchmark(start_time, table_name_images, table_name_contents, auth):
+    '''
+    Log benchmark: log elapsed time (s) and size of the tables (bytes)
+    * start_time: Start time
+    * table_name_images: Name of the images table
+    * table_name_contents: Name of the contents table
+    * auth: Authentication for PostgreSQL
+    '''
+    print('Elapsed time: {} s'.format(time.time() - start_time))
+
+    # print database size
+    try:
+        connection = psycopg2.connect(**auth)
+        cursor = connection.cursor()
+
+        query = "SELECT pg_total_relation_size('{}');".format(table_name_images)
+        cursor.execute(query)
+        rows = cursor.fetchone()
+        table_size_images = rows[0]
+
+        query = "SELECT pg_total_relation_size('{}');".format(table_name_contents)
+        cursor.execute(query)
+        rows = cursor.fetchone()
+        table_size_contents = rows[0]
+
+        print("Size of tables: {} bytes".format(table_size_images + table_size_contents))
+
+    except () as error:
+        print("Error while connecting to PostgreSQL", error)
+    finally:
+        if (connection):
+            cursor.close()
+            connection.close()
+
+
+
 def main():
     bucket_name, method_name, region_name, dir_name = parse_args()
+
+    # Start time for benchmark
+    t = time.time()
     
     spark = SparkSession\
         .builder\
@@ -132,17 +174,21 @@ def main():
     
     # Save the DataFrame to PostgreSQL table 
     pg_conf = pc.PostgresConfigurator()
+    table_name_images = 'images_{}_{}'.format(method_name, dir_name)
     df_images.write.jdbc(url = pg_conf.get_url(),
-                         table = 'images_{}_{}'.format(method_name, dir_name), 
+                         table = table_name_images, 
                          mode = 'overwrite', 
                          properties = pg_conf.get_properties())
-    
+
+    table_name_contents = 'contents_{}_{}'.format(method_name, dir_name)
     df_contents.write.jdbc(url = pg_conf.get_url(),
-                           table = 'contents_{}_{}'.format(method_name, dir_name),
+                           table = table_name_contents,
                            mode = 'overwrite',
                            properties = pg_conf.get_properties())
     
     spark.stop()
+
+    log_benchmark(t, table_name_images, table_name_contents, pg_conf.get_auth())
 
     
 if __name__ == "__main__":
