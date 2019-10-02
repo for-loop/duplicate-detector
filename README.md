@@ -66,7 +66,7 @@ spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2
 ### Help
 For more details, use `-h` option:
 ```bash
-spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py -h
+spark-submit --master spark://<master DNS>:7077 duplicate_detector.py -h
 ```
 3. Log onto PostgreSQL database and review the following tables:
 * `images_<method name>_<directory name>`
