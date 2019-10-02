@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.7.9'
+__version__ = '0.8.0'
 
 import argparse
 import io
@@ -10,6 +10,7 @@ import hashlib
 import numpy as np
 import skimage.io as skio
 import skimage.transform as transform
+from pyspark.sql import SQLContext
 from pyspark.sql import Row
 from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
@@ -118,16 +119,29 @@ def main():
     df = spark.sparkContext.parallelize(file_paths)\
         .map(lambda x: Row(path=x, content=encode(x, bucket_name, region_name, method_name)))\
         .toDF()\
-        .withColumn("img_id", F.monotonically_increasing_id())
+        .withColumn("image_id", F.monotonically_increasing_id())
     
-    # Save the DataFrame to PostgreSQL table. 
+    # Split df into contends and images
+    sqlContext = SQLContext(spark.sparkContext)
+    df.registerTempTable('images')
+    df_contents = sqlContext.sql("SELECT content FROM images GROUP BY content")\
+                            .withColumn("content_id", F.monotonically_increasing_id())
+    
+    df_contents.registerTempTable("contents")
+    df_images = sqlContext.sql("SELECT image_id, path, content_id FROM images AS i INNER JOIN contents AS c ON i.content = c.content")
+    
+    # Save the DataFrame to PostgreSQL table 
     pg_conf = pc.PostgresConfigurator()
-    table_name = 'images_{}_{}'.format(method_name, dir_name);
-    df.write.jdbc(url = pg_conf.get_url(),
-                  table = table_name, 
-                  mode = 'overwrite', 
-                  properties = pg_conf.get_properties())
-
+    df_images.write.jdbc(url = pg_conf.get_url(),
+                         table = 'images_{}_{}'.format(method_name, dir_name), 
+                         mode = 'overwrite', 
+                         properties = pg_conf.get_properties())
+    
+    df_contents.write.jdbc(url = pg_conf.get_url(),
+                           table = 'contents_{}_{}'.format(method_name, dir_name),
+                           mode = 'overwrite',
+                           properties = pg_conf.get_properties())
+    
     spark.stop()
 
     
