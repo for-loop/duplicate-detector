@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.8.1'
+__version__ = '0.8.2'
 
 import argparse
 import io
@@ -16,6 +16,8 @@ from pyspark.sql import Row
 from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
 import pgconf as pc
+import psycopg2
+from psycopg2 import Error
 
 
 def load(file_path, bucket_name, region_name):
@@ -149,6 +151,39 @@ def main():
     spark.stop()
 
     print('Elapsed time: {} s'.format(time.time() - t))
+
+    # print database size
+    try:
+        auth = pg_conf.get_auth()
+        connection = psycopg2.connect(user = auth['user'],
+                                      password = auth['password'],
+                                      host = auth['host'],
+                                      port = auth['port'],
+                                      database = auth['database'])
+        cursor = connection.cursor()
+        
+        print('Connected to PostgreSQL')
+        
+        query = "SELECT pg_total_relation_size('images_{}_{}');".format(method_name, dir_name)
+        cursor.execute(query)
+        rows = cursor.fetchone()
+        images_table_size = rows[0]
+
+        query = "SELECT pg_total_relation_size('contents_{}_{}');".format(method_name, dir_name)
+        cursor.execute(query)
+        rows = cursor.fetchone()
+        contents_table_size = rows[0]
+        
+        print("Size of tables: {} bytes".format(images_table_size + contents_table_size))
+        
+    except () as error:
+        print("Error while connecting to PostgreSQL", error)
+    finally:
+        if (connection):
+            cursor.close()
+            connection.close()
+            print("PostgreSQL closed")
+
 
     
 if __name__ == "__main__":
