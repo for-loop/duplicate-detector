@@ -28,9 +28,9 @@ Some of the problems to consider include the following:
 4. Iterate through each image and do one of the following (not all will be available):
 	* Base64 encode (with resampling to reduce resolution)
 	* Calculate md5 checksum
-	* Create trie-like structure and do pixel-by-pixel comparison
-	* Calculate Euclidean distance on a linearized vector against other images
-	* Compare features using SIFT algorithm
+	* ~~Create trie-like structure and do pixel-by-pixel comparison~~
+	* ~~Calculate Euclidean distance on a linearized vector against other images~~
+	* ~~Compare features using SIFT algorithm~~
 5. Output the result to PostgreSQL.
 6. Build a simple frontend to visualize the result.
 
