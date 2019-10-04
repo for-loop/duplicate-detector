@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.8.3'
+__version__ = '0.8.5'
 
 import argparse
 import io
@@ -16,8 +16,8 @@ from pyspark.sql import Row
 from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
 import pgconf as pc
-import psycopg2
-from psycopg2 import Error
+import sqlalchemy
+import pandas as pd
 
 
 def load(file_path, bucket_name, region_name):
@@ -105,7 +105,7 @@ def parse_args():
     return (bucket_name, method_name, region_name, dir_name)
 
 
-def log_benchmark(start_time, table_name_images, table_name_contents, auth):
+def log_benchmark(start_time, table_name_images, table_name_contents, pg_url):
     '''
     Log benchmark: log elapsed time (s) and size of the tables (bytes)
     * start_time: Start time
@@ -116,29 +116,17 @@ def log_benchmark(start_time, table_name_images, table_name_contents, auth):
     print('Elapsed time: {} s'.format(time.time() - start_time))
 
     # print database size
-    try:
-        connection = psycopg2.connect(**auth)
-        cursor = connection.cursor()
+    engine = sqlalchemy.create_engine(pg_url)
 
-        query = "SELECT pg_total_relation_size('{}');".format(table_name_images)
-        cursor.execute(query)
-        rows = cursor.fetchone()
-        table_size_images = rows[0]
+    query = "SELECT pg_total_relation_size('{}')".format(table_name_images)
+    df = pd.read_sql_query(query, con = engine)
+    table_size_images = df['pg_total_relation_size'].iloc[0]
 
-        query = "SELECT pg_total_relation_size('{}');".format(table_name_contents)
-        cursor.execute(query)
-        rows = cursor.fetchone()
-        table_size_contents = rows[0]
+    query = "SELECT pg_total_relation_size('{}');".format(table_name_contents)
+    df = pd.read_sql_query(query, con = engine)
+    table_size_contents = df['pg_total_relation_size'].iloc[0]
 
-        print("Size of tables: {} bytes".format(table_size_images + table_size_contents))
-
-    except () as error:
-        print("Error while connecting to PostgreSQL", error)
-    finally:
-        if (connection):
-            cursor.close()
-            connection.close()
-
+    print("Size of tables: {} bytes".format(table_size_images + table_size_contents))
 
 
 def main():
@@ -188,7 +176,7 @@ def main():
     
     spark.stop()
 
-    log_benchmark(t, table_name_images, table_name_contents, pg_conf.get_auth())
+    log_benchmark(t, table_name_images, table_name_contents, pg_conf.get_url_w_password())
 
     
 if __name__ == "__main__":

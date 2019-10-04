@@ -7,6 +7,7 @@ class PostgresConfigurator:
             self._auth = json.load(read_file)
 
         self._url = "jdbc:postgresql://{}:{}/{}".format(self._auth['host'], self._auth['port'], self._auth['database'])
+        self._url_w_password = 'postgresql://{}:{}@{}:{}/{}'.format(self._auth['user'], self._auth['password'], self._auth['host'], self._auth['port'], self._auth['database'])
         self._properties = {}
         self._properties['username'] = self._auth['user']
         self._properties['password'] = self._auth['password']
@@ -15,8 +16,8 @@ class PostgresConfigurator:
     def get_url(self):
         return self._url
 
+    def get_url_w_password(self):
+        return self._url_w_password
+
     def get_properties(self):
         return self._properties
-
-    def get_auth(self):
-        return self._auth
