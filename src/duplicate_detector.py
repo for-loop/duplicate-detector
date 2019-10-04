@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.8.5'
+__version__ = '0.8.6'
 
 import argparse
 import io
@@ -150,6 +150,8 @@ def main():
         .map(lambda x: Row(path=x, content=encode(x, bucket_name, region_name, method_name)))\
         .toDF()\
         .withColumn("image_id", F.monotonically_increasing_id())
+    
+    df.cache()
     
     # Split df into contends and images
     sqlContext = SQLContext(spark.sparkContext)
