@@ -49,7 +49,6 @@ I coded in **Python 3**.
 ```
 * [JDBC driver](https://jdbc.postgresql.org/download.html): Download to `~/drivers/` on master node
 * [boto3](https://github.com/boto/boto3): Install on all nodes
-* [scikit-image](https://scikit-image.org/docs/dev/install.html): Install on all nodes
 
 # Run
 
