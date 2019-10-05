@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.8.8'
+__version__ = '0.8.9'
 
 import ddargv
 import ddbenchmark
@@ -9,7 +9,7 @@ import boto3
 import base64
 import hashlib
 import numpy as np
-import skimage
+from PIL import Image
 from pyspark.sql import SQLContext
 from pyspark.sql import Row
 from pyspark.sql import functions as F
@@ -36,19 +36,14 @@ def resize(file_path, bucket_name, region_name, reduce_factor = 128):
     file_obj = bucket.Object(file_path)
     file_stream = io.BytesIO()
     file_obj.download_fileobj(file_stream)
-    img = skimage.io.imread(file_stream)
-    width = img.shape[0]//reduce_factor
-    height = img.shape[1]//reduce_factor
-    
-    # The following outputs a result that is close to skimage.transform.resize()
-    # with preserve_range=True and anti_aliasing=False.
-    # It is done manually instead because the installed skimage vers 0.10
-    # does not support the parameters.
-    PRESERVE_RANGE_FACTOR = 255
-    
-    return (skimage.transform.resize(img, (width, height), mode='reflect')*PRESERVE_RANGE_FACTOR).astype(np.uint8)
-    
-    
+    img = Image.open(file_stream)
+    width = img.size[0]//reduce_factor
+    height = img.size[1]//reduce_factor
+    new_img = img.resize((width, height))
+
+    return np.asarray(new_img)
+
+
 def encode(file_path, bucket_name, region_name, method):
     '''
     Return encoded string 
