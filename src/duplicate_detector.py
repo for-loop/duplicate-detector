@@ -1,23 +1,20 @@
 from __future__ import print_function
 
-__version__ = '0.8.7'
+__version__ = '0.8.8'
 
 import ddargv
+import ddbenchmark
 import io
 import boto3
 import base64
 import hashlib
-import time
 import numpy as np
-import skimage.io as skio
-import skimage.transform as transform
+import skimage
 from pyspark.sql import SQLContext
 from pyspark.sql import Row
 from pyspark.sql import functions as F
 from pyspark.sql.session import SparkSession
 import pgconf as pc
-import sqlalchemy
-import pandas as pd
 
 
 def load(file_path, bucket_name, region_name):
@@ -39,7 +36,7 @@ def resize(file_path, bucket_name, region_name, reduce_factor = 128):
     file_obj = bucket.Object(file_path)
     file_stream = io.BytesIO()
     file_obj.download_fileobj(file_stream)
-    img = skio.imread(file_stream)
+    img = skimage.io.imread(file_stream)
     width = img.shape[0]//reduce_factor
     height = img.shape[1]//reduce_factor
     
@@ -49,7 +46,7 @@ def resize(file_path, bucket_name, region_name, reduce_factor = 128):
     # does not support the parameters.
     PRESERVE_RANGE_FACTOR = 255
     
-    return (transform.resize(img, (width, height), mode='reflect')*PRESERVE_RANGE_FACTOR).astype(np.uint8)
+    return (skimage.transform.resize(img, (width, height), mode='reflect')*PRESERVE_RANGE_FACTOR).astype(np.uint8)
     
     
 def encode(file_path, bucket_name, region_name, method):
@@ -70,36 +67,14 @@ def encode(file_path, bucket_name, region_name, method):
         return base64.b64encode(data).decode()
 
 
-def log_benchmark(start_time, table_name_images, table_name_contents, pg_url):
-    '''
-    Log benchmark: log elapsed time (s) and size of the tables (bytes)
-    * start_time: Start time
-    * table_name_images: Name of the images table
-    * table_name_contents: Name of the contents table
-    * auth: Authentication for PostgreSQL
-    '''
-    print('Elapsed time: {} s'.format(time.time() - start_time))
-
-    # print database size
-    engine = sqlalchemy.create_engine(pg_url)
-
-    query = "SELECT pg_total_relation_size('{}')".format(table_name_images)
-    df = pd.read_sql_query(query, con = engine)
-    table_size_images = df['pg_total_relation_size'].iloc[0]
-
-    query = "SELECT pg_total_relation_size('{}');".format(table_name_contents)
-    df = pd.read_sql_query(query, con = engine)
-    table_size_contents = df['pg_total_relation_size'].iloc[0]
-
-    print("Size of tables: {} bytes".format(table_size_images + table_size_contents))
-
-
 def main():
     args = ddargv.ParseArgs("Duplicate Detector")
-    bucket_name, method_name, region_name, dir_name = args.get_all() #parse_args()
+    bucket_name, method_name, region_name, dir_name = args.get_all()
+
+    pg_conf = pc.PostgresConfigurator()
 
     # Start time for benchmark
-    t = time.time()
+    bm = ddbenchmark.Benchmark(method_name, dir_name, __version__, pg_conf.get_url_w_password())
     
     spark = SparkSession\
         .builder\
@@ -129,7 +104,6 @@ def main():
     df_images = sqlContext.sql("SELECT image_id, path, content_id FROM images AS i INNER JOIN contents AS c ON i.content = c.content")
     
     # Save the DataFrame to PostgreSQL table 
-    pg_conf = pc.PostgresConfigurator()
     table_name_images = 'images_{}_{}'.format(method_name, dir_name)
     df_images.write.jdbc(url = pg_conf.get_url(),
                          table = table_name_images, 
@@ -144,8 +118,8 @@ def main():
     
     spark.stop()
 
-    log_benchmark(t, table_name_images, table_name_contents, pg_conf.get_url_w_password())
-    
+    # Log benchmark
+    bm.log()
 
 if __name__ == "__main__":
     main()
