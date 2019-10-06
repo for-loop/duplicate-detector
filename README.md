@@ -55,7 +55,7 @@ I coded in **Python 3**.
 1. From the Terminal, cd to the `src` directory
 2. Execute the following command:
 ```bash
-spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar duplicate_detector.py <bucket name> [--method <method name> --region <region name> --dir <directory name>]
+spark-submit --master spark://<master DNS>:7077 --jars ~/drivers/postgresql-42.2.8.jar --executor-memory 5g duplicate_detector.py <bucket name> [--method <method name> --region <region name> --dir <directory name>]
 ```
 ### Supported method
 * `checksum`: Calculate md5 checksum
