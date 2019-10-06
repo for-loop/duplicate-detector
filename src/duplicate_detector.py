@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-__version__ = '0.8.9'
+__version__ = '0.9.0'
 
 import ddargv
 import ddbenchmark

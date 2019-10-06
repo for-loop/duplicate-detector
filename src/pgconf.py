@@ -1,16 +1,13 @@
-import json
+import os
 
 class PostgresConfigurator:
 
-    def __init__(self, path='../postgres_credentials.json'):
-        with open(path, "r") as read_file:
-            self._auth = json.load(read_file)
-
-        self._url = "jdbc:postgresql://{}:{}/{}".format(self._auth['host'], self._auth['port'], self._auth['database'])
-        self._url_w_password = 'postgresql://{}:{}@{}:{}/{}'.format(self._auth['user'], self._auth['password'], self._auth['host'], self._auth['port'], self._auth['database'])
+    def __init__(self):
+        self._url = "jdbc:postgresql://{}:{}/{}".format(os.environ['POSTGRES_HOST_PRIVATE'], os.environ['POSTGRES_PORT'], os.environ['POSTGRES_DATABASE'])
+        self._url_w_password = 'postgresql://{}:{}@{}:{}/{}'.format(os.environ['POSTGRES_USER'], os.environ['POSTGRES_PASSWORD'], os.environ['POSTGRES_HOST_PRIVATE'], os.environ['POSTGRES_PORT'], os.environ['POSTGRES_DATABASE'])
         self._properties = {}
-        self._properties['username'] = self._auth['user']
-        self._properties['password'] = self._auth['password']
+        self._properties['username'] = os.environ['POSTGRES_USER']
+        self._properties['password'] = os.environ['POSTGRES_PASSWORD']
         self._properties['driver'] = "org.postgresql.Driver"
 
     def get_url(self):

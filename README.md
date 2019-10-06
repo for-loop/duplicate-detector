@@ -37,15 +37,14 @@ Some of the problems to consider include the following:
 I coded in **Python 3**.
 
 # Dependencies
-* Authentication for PostgreSQL. Create `postgres_credentials.json` at root level. It should contain the following fields:
-```json
-{
-    "user":"xxxx",
-    "password":"xxxx",
-    "host":"x.x.x.x",
-    "port":"xxxx",
-    "database":"xxxx"
-}
+* Authentication for PostgreSQL. Create the following environmental variable in `.bash_profile`:
+```bash
+export POSTGRES_USER=xxxx
+export POSTGRES_PASSWORD=xxxx
+export POSTGRES_HOST_PUBLIC=x.x.x.x
+export POSTGRES_HOST_PRIVATE=x.x.x.x
+export POSTGRES_PORT=xxxx
+export POSTGRES_DATABASE=xxxx
 ```
 * [JDBC driver](https://jdbc.postgresql.org/download.html): Download to `~/drivers/` on master node
 * [boto3](https://github.com/boto/boto3): Install on all nodes
