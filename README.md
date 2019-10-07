@@ -1,7 +1,7 @@
 # Table of Contents
 1. [Problem](README.md#problem)
 2. [Approach](README.md#approach)
-3. [Tech Stack](README.md#techstack)
+3. [Tech Stack](README.md#tech_stack)
 3. [Dependencies](README.md#dependencies)
 4. [Run](README.md#run)
 5. [Tests](README.md#tests)
@@ -39,7 +39,7 @@ I coded in **Python 3**.
 
 # Tech Stack
 
-<img src='img/tech_stack.jpg' />
+<img src='img/tech_stack.jpeg' />
 
 # Dependencies
 * Authentication for PostgreSQL. Create the following environmental variable in `.bashrc`:
