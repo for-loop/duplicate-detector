@@ -37,7 +37,7 @@ Some of the problems to consider include the following:
 I coded in **Python 3**.
 
 # Dependencies
-* Authentication for PostgreSQL. Create the following environmental variable in `.bash_profile`:
+* Authentication for PostgreSQL. Create the following environmental variable in `.bashrc`:
 ```bash
 export POSTGRES_USER=xxxx
 export POSTGRES_PASSWORD=xxxx
@@ -76,3 +76,6 @@ The following test cases (in Amazon S3) are used for benchmark:
 2. `test_2`: A set of 120 `jpg` files (40.5 MB) containing one set of duplicate and one set of triplicate
 3. `test_3`: A set of 10 `jpg` files (7.3 MB) containing the same image with watermark in different locations
 4. `test_4`: A set of 3421 `jpg` files (1.0 GB) containing one set of duplicate and one set of triplicate
+5. `validation`: A set of 41623 `jpg` files (12 GB) containing one set of duplicate and one set of triplicate
+6. `test`: A set of 125439 `jpg` files (36 GB) containing one set of duplicate and one set of triplicate
+7. `train`: A set of 1743058 `jpg` files (512.8 GB) containing one set of duplicate and one set of triplicate
