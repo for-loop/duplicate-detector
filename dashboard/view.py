@@ -10,8 +10,6 @@ import sqlalchemy
 import pandas as pd
 import numpy as np
 
-dir_name = 'train'
-
 
 def postgres_url():
     '''
@@ -45,11 +43,15 @@ def show_results(dir_name, engine):
     '''
     Show images that are exact matches and / or potential matches
     '''
+    res = engine.execute('SELECT COUNT(*) FROM images_checksum_{};'.format(dir_name))
+    num_images = res.fetchone()[0]
+    tags = [ html.P('The directory contains {} images'.format(num_images))  ]
+
     # Find exact match using checksum data
     df_paths_checksum = pd.read_sql_query('SELECT path FROM images_checksum_{} WHERE content_id IN (SELECT content_id FROM images_checksum_{} GROUP BY content_id HAVING COUNT(*) > 1)'.format(dir_name, dir_name), con = engine)
     df_contents_checksum = pd.read_sql_query('SELECT content_id FROM images_checksum_{} GROUP BY content_id HAVING COUNT(*) > 1 ORDER BY COUNT(*) DESC'.format(dir_name), con = engine)
     
-    tags = [ html.H3('Exact Match')  ]
+    tags += [ html.H3('Exact Match')  ]
     for content_id in df_contents_checksum['content_id']:
         df_images = pd.read_sql_query('SELECT path FROM images_checksum_{} WHERE content_id = {}'.format(dir_name, content_id), con = engine)
         
@@ -58,11 +60,12 @@ def show_results(dir_name, engine):
         
         tags += [ html.Div(img_tag(df_images)) ]
     
-    if len(tags) == 1:
+    if len(tags) == 2:
         tags += [ html.P('None')  ]
 
     # Find potential match using base_small data
     cnt_potential_match = 0
+    tags += [ html.Hr() ]
     tags += [ html.H3('Potential Match')  ]
     df_contents_base_small = pd.read_sql_query('SELECT content_id FROM images_base_small_{} GROUP BY content_id HAVING COUNT(*) > 1 ORDER BY COUNT(*) DESC'.format(dir_name), con = engine)
     
@@ -125,24 +128,105 @@ engine = sqlalchemy.create_engine(postgres_url())
 
 app.layout = html.Div([
     html.H1('DuplicateDetector demo'),
+    
     dcc.Tabs(id="tabs-example", value='tab-1-example', children=[
-        dcc.Tab(label=custom_tab_label(dir_name, engine), value='tab-1-example'),
+        
+        dcc.Tab(label="Results", value='tab-1-example', children=[
+            html.Div(dcc.Input(id='input-box', type='text', value='test_1'), style={'float':'left'}),
+            html.Button('See result', id='button'),
+            html.Div(id='output-container-button',
+                children='Enter a directory name and click See Result')
+        ]),
+        
         dcc.Tab(label='Benchmark', value='tab-2-example'),
     ]),
     html.Div(id='tabs-content-example')
 ])
+
 
 @app.callback(Output('tabs-content-example', 'children'),
               [Input('tabs-example', 'value')])
 def render_content(tab):
     if tab == 'tab-1-example':
         return html.Div([
-
-            html.Div(show_results(dir_name, engine)),
-
+            # Intentionally left blank
+            # Will be updated by the button callback
         ])
     elif tab == 'tab-2-example':
+        df_benchmark = pd.read_sql_query('SELECT m.method, b.num_images, (AVG(b.bytes)/1024)/1024 AS MB, AVG(b.seconds)/60 AS min FROM benchmarks AS b INNER JOIN methods AS m ON b.method_id = m.method_id GROUP BY m.method_id, b.num_images;', con = engine)
         return html.Div([
+
+            dcc.Graph(
+                id='graph-2-tabs',
+                figure={
+                    'data': [{
+                        'x': df_benchmark[df_benchmark['method']==i]['num_images'],
+                        'y': df_benchmark[df_benchmark['method']==i]['mb'],
+                        'name': i,
+                        'opacity': 0.75,
+                        'marker':{
+                            'size': 10
+                        },
+                        'type': 'scatter'
+                    } for i in df_benchmark['method'].unique()],
+
+                    'layout':{
+                        'title':'Table size',
+                        'xaxis':{
+                            'title':'Number of images'
+                        },
+                        'yaxis':{
+                            'title':'average size (MB)'
+                        }
+                    }
+                }
+            ),
+            html.Hr(),
+
+            dcc.Graph(
+                id='graph-2-tabs',
+                figure={
+                    'data': [{
+                        'x': df_benchmark[df_benchmark['method']==i]['num_images'],
+                        'y': df_benchmark[df_benchmark['method']==i]['min'],
+                        'name': i,
+                        'opacity': 0.75,
+                        'marker':{
+                            'size': 10
+                        },
+                        'type': 'scatter'
+                    } for i in df_benchmark['method'].unique()],
+                    
+                    'layout':{
+                        'title':'Speed',
+                        'xaxis':{
+                            'title':'Number of images'
+                        },
+                        'yaxis':{
+                            'title':'average time (min)'
+                        }
+                    }
+                }
+            ),
+            html.Hr(),
+
+            html.H3('Raw benchmark'),
             generate_table(get_benchmark_table(engine))
         ])
 
+
+@app.callback(
+    dash.dependencies.Output('output-container-button', 'children'),
+    [dash.dependencies.Input('button', 'n_clicks')],
+    [dash.dependencies.State('input-box', 'value')])
+def update_output(n_clicks, value):
+    '''
+    Show results based on the value entered by the user
+    '''
+    res = engine.execute("SELECT COUNT(*) FROM directories WHERE directory='{}';".format(value))
+    exists = res.fetchone()[0]
+
+    if exists:
+        return show_results(value, engine)
+
+    return 'Result does not exist. Try another directory'
