@@ -45,7 +45,9 @@ def show_results(dir_name, engine):
     '''
     res = engine.execute('SELECT COUNT(*) FROM images_checksum_{};'.format(dir_name))
     num_images = res.fetchone()[0]
-    tags = [ html.P('The directory contains {} images'.format(num_images))  ]
+    tags = [ html.P('Scanned {} images'.format(num_images),
+                style={'font-size':'1.3em'}
+            )]
 
     # Find exact match using checksum data
     df_paths_checksum = pd.read_sql_query('SELECT path FROM images_checksum_{} WHERE content_id IN (SELECT content_id FROM images_checksum_{} GROUP BY content_id HAVING COUNT(*) > 1)'.format(dir_name, dir_name), con = engine)
@@ -155,63 +157,111 @@ def render_content(tab):
     elif tab == 'tab-2-example':
         df_benchmark = pd.read_sql_query('SELECT m.method, b.num_images, (AVG(b.bytes)/1024)/1024 AS MB, AVG(b.seconds)/60 AS min FROM benchmarks AS b INNER JOIN methods AS m ON b.method_id = m.method_id GROUP BY m.method_id, b.num_images;', con = engine)
         return html.Div([
-
-            dcc.Graph(
-                id='graph-2-tabs',
-                figure={
-                    'data': [{
-                        'x': df_benchmark[df_benchmark['method']==i]['num_images'],
-                        'y': df_benchmark[df_benchmark['method']==i]['mb'],
-                        'name': i,
-                        'opacity': 0.75,
-                        'marker':{
-                            'size': 10
-                        },
-                        'type': 'scatter'
-                    } for i in df_benchmark['method'].unique()],
-
-                    'layout':{
-                        'title':'Table size',
-                        'xaxis':{
-                            'title':'Number of images'
-                        },
-                        'yaxis':{
-                            'title':'average size (MB)'
+            html.Div(
+                dcc.Graph(
+                    id='graph-2-tabs',
+                    figure={
+                        'data': [{
+                            'x': df_benchmark[df_benchmark['method']==i]['num_images'],
+                            'y': df_benchmark[df_benchmark['method']==i]['mb'],
+                            'name': i,
+                            'opacity': 0.75,
+                            'marker':{
+                                'size': 10
+                            },
+                            'type': 'scatter'
+                        } for i in df_benchmark['method'].unique()],
+                        
+                        'layout':{
+                            'showlegend':False,
+                            'title':'Size (MB)',
+                            'titlefont':{
+                                'size':24
+                            },
+                            'xaxis':{
+                                'title':'Number of images',
+                                'titlefont':{
+                                    'size':18
+                                },
+                                'tickfont':{
+                                    'size':18
+                                }
+                            },
+                            'yaxis':{
+                                #'title':'Size (MB)',
+                                'titlefont':{
+                                    'size':18
+                                },
+                                'tickfont':{
+                                    'size':18
+                                }
+                            },
+                            'legend':{
+                                'font':{
+                                    'size':18
+                                }
+                            },
+                            'width':600
                         }
                     }
-                }
+                ), style={'float':'left'}
             ),
-            html.Hr(),
 
-            dcc.Graph(
-                id='graph-2-tabs',
-                figure={
-                    'data': [{
-                        'x': df_benchmark[df_benchmark['method']==i]['num_images'],
-                        'y': df_benchmark[df_benchmark['method']==i]['min'],
-                        'name': i,
-                        'opacity': 0.75,
-                        'marker':{
-                            'size': 10
-                        },
-                        'type': 'scatter'
-                    } for i in df_benchmark['method'].unique()],
-                    
-                    'layout':{
-                        'title':'Speed',
-                        'xaxis':{
-                            'title':'Number of images'
-                        },
-                        'yaxis':{
-                            'title':'average time (min)'
+            html.Div(
+                dcc.Graph(
+                    id='graph-2-tabs',
+                    figure={
+                        'data': [{
+                            'x': df_benchmark[df_benchmark['method']==i]['num_images'],
+                            'y': df_benchmark[df_benchmark['method']==i]['min'],
+                            'name': i,
+                            'opacity': 0.75,
+                            'marker':{
+                                'size': 10
+                            },
+                            'type': 'scatter'
+                        } for i in df_benchmark['method'].unique()],
+                        
+                        'layout':{
+                            'title':'Time (min)',
+                            'titlefont':{
+                                'size':24
+                            },
+                            'xaxis':{
+                                'title':'Number of images',
+                                'titlefont':{
+                                    'size':18
+                                },
+                                'tickfont':{
+                                    'size':18
+                                }
+                            },
+                            'yaxis':{
+                                #'title':'Time (min)',
+                                'titlefont':{
+                                    'size':18
+                                },
+                                'tickfont':{
+                                    'size':18
+                                }
+                            },
+                            'legend':{
+                                'font':{
+                                    'size':18
+                                }
+                            },
+                            'width':700
                         }
                     }
-                }
+                ), style={'float':'left'}
             ),
-            html.Hr(),
-
-            html.H3('Raw benchmark'),
-            generate_table(get_benchmark_table(engine))
+            
+            html.Div([
+                html.Br(),
+                html.Hr(),
+                html.H3('Raw benchmark'),
+                generate_table(get_benchmark_table(engine)),
+            ], style={'clear':'both'})
         ])
 
 
@@ -223,6 +273,8 @@ def update_output(n_clicks, value):
     '''
     Show results based on the value entered by the user
     '''
+    if value == 'full_data':
+        value = 'train'
     res = engine.execute("SELECT COUNT(*) FROM directories WHERE directory='{}';".format(value))
     exists = res.fetchone()[0]
 
